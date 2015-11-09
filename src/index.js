@@ -1,5 +1,6 @@
 'use strict';
 
+require('node-babel')();
 const server = require('whirlpool');
 // token: 2887648e-f89a-4465-b38a-9a7b417e22db
 
