@@ -1,0 +1,13 @@
+[{
+    "method": "post",
+    "path": "/users",
+    "handler": "./../user/create"
+},{
+    "method": "post",
+    "path": "/userSession",
+    "handler": "./../userSession/create"
+},{
+    "method": "delete",
+    "path": "/userSession",
+    "handler": "./../userSession/delete"
+}]
