@@ -8,7 +8,7 @@ const groups = require('./../persistence/groups');
 module.exports = function (req) {
     return rx.Observable.create(function (o) {
         const options = {
-            url: 'http://localhost:4100/users/' + req.params.user_id,
+            url: 'http://cryptic-plains-9851.herokuapp.com/users/' + req.params.user_id,
             headers: {
                 'x-auth-token': req.headers['x-auth-token']
             }
