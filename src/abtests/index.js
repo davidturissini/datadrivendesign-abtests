@@ -4,6 +4,8 @@ const rx = require('rx');
 const request = require('request');
 const abtests = require('./../persistence/abtests');
 const groups = require('./../persistence/groups');
+const impressions = require('./../persistence/impressions');
+const conversions = require('./../persistence/conversions');
 
 module.exports = function (req) {
     return rx.Observable.create(function (o) {
@@ -39,7 +41,16 @@ module.exports = function (req) {
     .flatMapLatest((userAbTests) => {
         return rx.Observable.create(function (o) {
             const tests = userAbTests.map(function (userAbTest) {
-                userAbTest.groups = groups.findAllForABTest(userAbTest);
+                userAbTest.groups = groups.findAllForABTest(userAbTest)
+                    .map(function (group) {
+                        const groupMembers = impressions.findAllByGroup(group);
+                        const groupConversions = conversions.findAllByGroup(group);
+                        
+                        group.population = groupMembers.length;
+                        group.conversions = groupConversions.length;
+
+                        return group;
+                    });
 
                 return userAbTest;
             });
