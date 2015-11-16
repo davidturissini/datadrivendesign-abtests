@@ -59,14 +59,13 @@ module.exports = function (req) {
             }, 0);
 
            
-
+            let beenAssigned = false;
             return rx.Observable.create(function (o) {
-                console.log('population', totalAbtestPopulation);
                 if (totalAbtestPopulation === 0) {
                     o.onNext(groups[0]);
                 } else {
 
-                    let beenAssigned = false;
+                    
                     groups.forEach(function (group) {
                         if (beenAssigned === true) {
                             return;
@@ -85,6 +84,10 @@ module.exports = function (req) {
 
                     });
 
+                }
+
+                if (beenAssigned === false) {
+                    o.onNext(groups[0]);
                 }
 
                 o.onCompleted();
