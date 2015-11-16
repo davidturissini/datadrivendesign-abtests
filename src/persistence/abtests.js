@@ -5,7 +5,7 @@ const uuid = require('uuid');
 const abtests = [{
     id: '7240dbb2-e5cd-41da-a36f-f6ed39b18af0',
     user_id: 1,
-    name: 'abtest1',
+    name: 'My test abtest',
     sampleSize: 10000,
     group_control_id: 1
 }];
