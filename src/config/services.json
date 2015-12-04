@@ -1,0 +1,9 @@
+{
+    "user-management": {
+        "host": "localhost",
+        "port": 4100,
+        "protocol": "http",
+        "app_key": "56578efaf427032f0620c353",
+        "app_secret": "$2a$10$3oIETVvpMtgktgSgt4xdpO"
+    }
+}
