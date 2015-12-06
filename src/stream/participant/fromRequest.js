@@ -2,31 +2,28 @@
 
 const rx = require('rx');
 
-const participants = require('./../../persistence/participants');
+// Action
+const createParticipantWithKey = require('./../../action/participant/createWithKey');
 
+// Model
+const Participant = require('./../../model/Participant');
+
+// Query
+const participantQueryWithKey = require('./../../queries/participant/queryByKey');
 
 module.exports = function (req) {
-    const observable = rx.Observable.create(function (o) {
-        const participantId = req.body.participant_id;
-        let participant;
+    const key = req.body.participant_id;
+    
+    return participantQueryWithKey(key)
+        .flatMapLatest((participant) => {
+            console.log(participant);
+            if (!participant) {
+                return createParticipantWithKey(key);
+            }
 
-        if (participantId === undefined || participantId === null) {
-            participant = participants.save({});
-        } else {
-            participant = participants.get(participantId);
-        }
+            return rx.Observable.return(participant);
 
-        if (!participant) {
-            throw new TypeError('Invalid participant id. Participant with id "' + participantId + '" could not be found.');
-        }
+        });
 
-        o.onNext(participant);
-        o.onCompleted();
-
-    }).replay(undefined, 1);
-
-    observable.connect();
-
-    return observable;
 
 }

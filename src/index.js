@@ -12,7 +12,7 @@ const server = require('whirlpool');
 server(process.env.PORT || 4000, [{
     method: 'post',
     path: '/users',
-    handler: './src/controller/users/create'
+    handler: './src/controller/user/create'
 },{
     method: 'post',
     path: '/userSession',
@@ -20,23 +20,23 @@ server(process.env.PORT || 4000, [{
 },{
     method: 'get',
     path: '/users/:user_id',
-    handler: './src/controller/users/show'
+    handler: './src/controller/user/show'
 },{
     method: 'get',
     path: '/users/:user_id/abtests',
-    handler: './src/controller/abtests/index'
+    handler: './src/controller/abtest/index'
 },{
     method: 'post',
     path: '/users/:user_id/abtests',
-    handler: './src/controller/abtests/create'
+    handler: './src/controller/abtest/create'
 },{
     method: 'post',
     path: '/abtests/:abtest_id/impressions',
-    handler: './src/impressions/create'
+    handler: './src/controller/impression/create'
 },{
     method: 'post',
-    path: '/abtests/:abtest_id/convert',
-    handler: './src/conversions/create'
+    path: '/abtests/:abtest_id/conversions',
+    handler: './src/controller/conversion/create'
 }], {
     cwd: __dirname + '/../'
 });

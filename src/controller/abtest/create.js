@@ -19,7 +19,7 @@ module.exports = function (req) {
                 o.onError(err);
                 return;
             }
-            console.log(user);
+            
             o.onNext(user);
             o.onCompleted();
         })
