@@ -39,7 +39,7 @@ module.exports = function (req) {
                         o.onError(err);
                         return;
                     }
-                    console.log(userSessionJson);
+                    
                     const userSessionData = {
                         data: {
                             _id: userSessionJson.data._id,

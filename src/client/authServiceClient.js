@@ -24,7 +24,6 @@ module.exports = function (path, params) {
     if (requestParams.method === 'get') {
         requestParams = _.omit(requestParams, 'body');
     }
-    console.log(requestParams);
 
     const body = JSON.stringify(requestParams.body || {});
     const qs = JSON.stringify(requestParams.qs);
@@ -36,9 +35,8 @@ module.exports = function (path, params) {
             const fullPath = `/apps/${config.app_key}${path}`;
             const url = `${config.protocol}://${config.host}:${config.port}${fullPath}`;
             const str = (`${requestParams.method}${fullPath}${qs}${body}`).toLowerCase();
-            console.log(str);
             const hmac = crypto.createHmac("SHA256", config.app_secret).update(str).digest('base64');
-            
+            console.log(url);
 
             return {
                 method: requestParams.method,

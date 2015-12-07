@@ -3,17 +3,22 @@
 const rx = require('rx');
 const _ = require('lodash');
 
-// Client
-const authServiceClient = require('./../../client/authServiceClient');
+// Action
+const validateUserSession = require('./../../action/user/validateUserSession');
 
 // Model
 const AbTest = require('./../../model/AbTest');
 const AbTestGroup = require('./../../model/AbTestGroup');
 const User = require('./../../model/User');
 
+// Stream
+const userFromRequestStream = require('./../../stream/user/fromRequest');
+
 // Queries
 const queryAbtestGroups = require('./../../queries/abtest/queryGroups');
 const queryAbtestGroupImpressionsCount = require('./../../queries/abtestGroup/queryImpressionsCount');
+const queryAbtestGroupConversionsCount = require('./../../queries/abtestGroup/queryConversionsCount');
+const queryUserAbtests = require('./../../queries/user/queryAbTests');
 
 // formatters
 const abtestToJsonFormatter = require('./../../formatters/abtest/abTestAttributesObject');
@@ -21,116 +26,94 @@ const abtestGroupToJsonFormatter = require('./../../formatters/abtestGroup/abTes
 const impressionToJsonFormatter = require('./../../formatters/impression/impressionToAttributesObject');
 
 module.exports = function (req) {
+    const authHeader = req.headers.authentication;
+    
 
-    return rx.Observable.create(function (o) {
-        const user_id = req.params.user_id;
+    return userFromRequestStream(req)
 
-        User.findById(user_id, function (err, user) {
-            if (err) {
-                o.onError(err);
-                return;
-            }
+        .flatMapLatest((user) => {
+            const userSessionToken = req.headers.authentication.split(':')[1];
+            return validateUserSession(user, userSessionToken);
+        })
 
-            o.onNext(user);
-            o.onCompleted();
+        .flatMapLatest((user) => {
+            return queryUserAbtests(user);
+        })
 
-        });
+        .flatMap((abtest) => {
+            const data = {
+                abtest: abtest,
+                abtestGroups: []
+            };
 
-    })
+            return queryAbtestGroups(abtest)
+                .flatMap((abtestGroup) => {
+                    const groupData = {
+                        abtestGroup: abtestGroup,
+                        impressions_count: 0
+                    };
 
-    .flatMapLatest((user) => {
+                    data.abtestGroups.push(groupData);
 
-        return rx.Observable.create(function (o) {
-            
-            AbTest.find({
-                user: user
-            }, function (err, abtests) {
-                if (err) {
-                    o.onError(err);
-                    return;
-                }
+                    return queryAbtestGroupImpressionsCount(abtestGroup)
+                        .combineLatest(
+                            queryAbtestGroupConversionsCount(abtestGroup),
+                            function (impressions_count, conversions_count) {
+                                groupData.impressions_count = impressions_count;
+                                groupData.conversions_count = conversions_count;
+                            }
+                        );
 
-                abtests.forEach(function (abtest) {
-                    o.onNext(abtest);
+                })
+                .reduce(() => {
+                    return data;
                 });
-
-                
-                o.onCompleted();
-            })
 
         })
 
-    })
+        .toArray()
 
-    .flatMap((abtest) => {
-        const data = {
-            abtest: abtest,
-            abtestGroups: []
-        };
+        .map((queryDataAry) => {
+            const json = {
+                data: []
+            };
 
-        return queryAbtestGroups(abtest)
-            .flatMap((abtestGroup) => {
-                const groupData = {
-                    abtestGroup: abtestGroup,
-                    impressions_count: 0
+            queryDataAry.forEach((queryData) => {
+                const abtest = queryData.abtest;
+                const groups = queryData.abtestGroups;
+
+                const data = {
+                    type: 'abtest',
+                    id: abtest._id,
+                    attributes: abtestToJsonFormatter(abtest),
+                    relationships: {
+                        abtestGroups: {
+                            data: groups.map(function (groupData) {
+                                const abtestGroup = groupData.abtestGroup;
+                                const abtestGroupAttributes = abtestGroupToJsonFormatter(abtestGroup);
+                                abtestGroupAttributes.id = abtestGroup._id;
+
+                                return {
+                                    data: abtestGroupAttributes,
+                                    meta: {
+                                        conversions_count: groupData.conversions_count,
+                                        impressions_count: groupData.impressions_count
+                                    }
+                                } 
+                            })
+                        }
+                    }
                 };
+                
 
-                data.abtestGroups.push(groupData);
+                json.data.push(data);
 
-                return queryAbtestGroupImpressionsCount(abtestGroup)
-                    .map((count) => {
-                        groupData.impressions_count = count;
-                    });
-
-            })
-            .reduce(() => {
-                return data;
             });
 
-    })
+            return json;
+        })
 
-    .toArray()
-
-    .map((queryDataAry) => {
-        const json = {
-            data: []
-        };
-
-        queryDataAry.forEach((queryData) => {
-            const abtest = queryData.abtest;
-            const groups = queryData.abtestGroups;
-
-            const data = {
-                type: 'abtest',
-                id: abtest._id,
-                attributes: abtestToJsonFormatter(abtest),
-                relationships: {
-                    abtestGroups: {
-                        data: groups.map(function (groupData) {
-                            const abtestGroup = groupData.abtestGroup;
-                            const abtestGroupAttributes = abtestGroupToJsonFormatter(abtestGroup);
-                            abtestGroupAttributes.id = abtestGroup._id;
-
-                            return {
-                                data: abtestGroupAttributes,
-                                meta: {
-                                    impressions_count: groupData.impressions_count
-                                }
-                            } 
-                        })
-                    }
-                }
-            };
-            
-
-            json.data.push(data);
-
+        .map((json) => {
+            return JSON.stringify(json);
         });
-
-        return json;
-    })
-
-    .map((json) => {
-        return JSON.stringify(json);
-    })
 };

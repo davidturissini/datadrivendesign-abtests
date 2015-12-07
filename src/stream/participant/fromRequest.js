@@ -16,7 +16,6 @@ module.exports = function (req) {
     
     return participantQueryWithKey(key)
         .flatMapLatest((participant) => {
-            console.log(participant);
             if (!participant) {
                 return createParticipantWithKey(key);
             }

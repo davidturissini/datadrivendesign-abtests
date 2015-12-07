@@ -50,7 +50,6 @@ module.exports = function (req) {
     })
 
     .map((json) => {
-        console.log('json', json);
         return JSON.stringify(json);
     });
 }

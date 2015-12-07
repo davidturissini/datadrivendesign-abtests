@@ -18,6 +18,10 @@ server(process.env.PORT || 4000, [{
     path: '/userSession',
     handler: './src/controller/userSession/create'
 },{
+    method: 'delete',
+    path: '/userSession',
+    handler: './src/controller/userSession/delete'
+},{
     method: 'get',
     path: '/users/:user_id',
     handler: './src/controller/user/show'

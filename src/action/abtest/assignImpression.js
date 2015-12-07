@@ -48,7 +48,6 @@ module.exports = function (abtest, participant) {
 
 
                     if (currentDistribution < groupDistribution) {
-                        console.log('returning!');
                         return abtestGroup;
                     }
 
