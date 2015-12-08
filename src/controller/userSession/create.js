@@ -1,6 +1,7 @@
 'use strict';
 
 const rx = require('rx');
+const _ = require('lodash');
 
 // Client
 const authServiceClient = require('./../../client/authServiceClient');
@@ -29,7 +30,8 @@ module.exports = function (req) {
         })
 
         .flatMapLatest((userSessionJson) => {
-            const userManagementId = userSessionJson.data.user_id;
+            const userManagementId = userSessionJson.data.relationships.user.id;
+            console.log('uuuu', userSessionJson.data.relationships.user);
 
             return rx.Observable.create(function (o) {
                 User.findOne({
@@ -39,11 +41,17 @@ module.exports = function (req) {
                         o.onError(err);
                         return;
                     }
+
+                    const userData = _.clone(userSessionJson.data.relationships.user);
+                    userData.id = user._id;
                     
                     const userSessionData = {
                         data: {
-                            _id: userSessionJson.data._id,
-                            user_id: user._id
+                            type: 'usersession',
+                            id: userSessionJson.data.id,
+                            relationships: {
+                                user: userData
+                            }
                         }
                     };
 
