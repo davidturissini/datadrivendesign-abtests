@@ -80,9 +80,6 @@ module.exports = function (req) {
                     }
                 }
             };
-        })
-        .map((data) => {
-            return JSON.stringify(data);
         });
 
 }

@@ -87,9 +87,7 @@ module.exports = function (req) {
         })
 
         .map((abtest) => {
-
-            const obj = _.omit(abtest.toObject(), '__v');
-            return JSON.stringify(obj);
+            return _.omit(abtest.toObject(), '__v');
         });
 
 }

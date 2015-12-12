@@ -68,10 +68,6 @@ module.exports = function (req) {
             });
         });
 
-    })
-
-    .map((userObject) => {
-        return JSON.stringify(userObject);
     });
 
 }

@@ -53,9 +53,6 @@ module.exports = function (req) {
                 o.onCompleted();
 
             });
-        })
-        .map((resp) => {
-            return JSON.stringify(resp);
-        })
+        });
 
 }

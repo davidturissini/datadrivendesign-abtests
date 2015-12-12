@@ -59,10 +59,6 @@ module.exports = function (req) {
                 });
 
             });
-        })
-
-        .map((json) => {
-            return JSON.stringify(json);
-        })
+        });
 
 };
