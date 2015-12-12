@@ -17,6 +17,7 @@ const userFromRequestStream = require('./../../stream/user/fromRequest');
 // Queries
 const queryAbtestGroups = require('./../../queries/abtest/queryGroups');
 const queryAbtestGroupImpressionsCount = require('./../../queries/abtestGroup/queryImpressionsCount');
+const queryAbtestState = require('./../../queries/abtest/queryAbTestState');
 const queryAbtestGroupConversionsCount = require('./../../queries/abtestGroup/queryConversionsCount');
 const queryUserAbtests = require('./../../queries/user/queryAbTests');
 
@@ -71,6 +72,16 @@ module.exports = function (req) {
 
         })
 
+        .flatMap((queryData) => {
+            const abtest = queryData.abtest;
+
+            return queryAbtestState(abtest)
+                .map((abtestState) => {
+                    queryData.abtestState = abtestState;
+                    return queryData;
+                });
+        })
+
         .toArray()
 
         .map((queryDataAry) => {
@@ -81,12 +92,19 @@ module.exports = function (req) {
             queryDataAry.forEach((queryData) => {
                 const abtest = queryData.abtest;
                 const groups = queryData.abtestGroups;
+                const abtestState = queryData.abtestState;
 
                 const data = {
                     type: 'abtest',
                     id: abtest._id,
                     attributes: abtestToJsonFormatter(abtest),
                     relationships: {
+                        abtestState: {
+                            data: {
+                                status: abtestState.status
+                            }
+                        },
+
                         abtestGroups: {
                             data: groups.map(function (groupData) {
                                 const abtestGroup = groupData.abtestGroup;
@@ -110,10 +128,6 @@ module.exports = function (req) {
 
             });
 
-            return json;
-        })
-
-        .map((json) => {
-            return JSON.stringify(json);
+            return json.data;
         });
 };

@@ -34,22 +34,15 @@ module.exports = function (req) {
         })
         .map((userResp) => {
             const userData = userResp.data;
+            const userObject = user.toObject();
+            userObject.id = userObject._id;
 
-            return _.extend(userData, user.toObject());
+            return _.extend(userData, userObject);
         })
     })
 
     .map((json) => {
-        return _.omit(json, 'user_management_id', '__v');
-    })
-
-    .map((json) => {
-        return {
-            data: json
-        };
-    })
-
-    .map((json) => {
-        return JSON.stringify(json);
+        return _.omit(json, 'user_management_id', '__v', '_id');
     });
+
 }

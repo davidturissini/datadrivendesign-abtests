@@ -31,7 +31,6 @@ module.exports = function (req) {
 
         .flatMapLatest((userSessionJson) => {
             const userManagementId = userSessionJson.data.relationships.user.id;
-            console.log('uuuu', userSessionJson.data.relationships.user);
 
             return rx.Observable.create(function (o) {
                 User.findOne({

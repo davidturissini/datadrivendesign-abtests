@@ -7,6 +7,7 @@ const _ = require('lodash');
 // Model
 const AbTest = require('./../../model/AbTest');
 const AbTestGroup = require('./../../model/AbTestGroup');
+const AbTestState = require('./../../model/AbTestState');
 const User = require('./../../model/User');
 
 // Action
@@ -64,6 +65,25 @@ module.exports = function (req) {
 
 
             })
+        })
+
+        .flatMapLatest((abtest) => {
+            return rx.Observable.create(function (o) {
+
+                AbTestState.create({
+                    abtest:abtest,
+                    status: AbTestState.STATUS_ACTIVE
+                }, function (err, abtestState) {
+                    if (err) {
+                        o.onError(err);
+                    }
+
+                    o.onNext(abtest);
+                    o.onCompleted();
+
+                });
+
+            });
         })
 
         .map((abtest) => {
