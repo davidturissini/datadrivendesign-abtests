@@ -1,0 +1,207 @@
+'use strict';
+
+const request = require('supertest');
+const chai = require('chai');
+const expect = chai.expect;
+const url = 'http://127.0.0.1:4000';
+const logUserIn = require('./../helper/user-login');
+
+// asserts
+const assertErrorMessageReceived = require('./../assert/errorMessageReceived');
+const assertAbTestMissingAttributes = require('./../assert/abtest/assertMissingAttributes');
+
+describe('creating ab test', function () {
+    let res;
+
+    describe('successful requests', function () {
+        before(function (done) {
+            let userId;
+            let userSessionId;
+
+            logUserIn('test@test.com', 'password')
+                .then(function (loginData) {
+                    userId = loginData.relationships.user.id;
+                    userSessionId = loginData.id;
+
+                    request(url)
+                        .post(`/users/${userId}/abtests`)
+                        .set('authentication', `token ${userId}:${userSessionId}`)
+                        .send({
+                            data: {
+                                attributes: {
+                                    name: 'abtest',
+                                    sampleSize: 4300
+                                },
+                                relationships: {
+                                    abtestGroup: [{
+                                        slug: 'group-1',
+                                        distribution: 0.5,
+                                        name: 'group 1'
+                                    }, {
+                                        slug: 'group-2',
+                                        distribution: 0.5,
+                                        name: 'group 2'
+                                    }]
+                                }
+                            }
+                        })
+                        .end(function (err, r) {
+                            res = r;
+                            done();
+                        });
+                });
+        });
+
+        it('should have a status 200', function () {
+            expect(res.statusCode).to.equal(200);
+        });
+
+        describe('response', function () {
+            let body;
+
+            beforeEach(function () {
+                body = res.body;
+            });
+
+            it('should have a data attribute', function () {
+                expect(body.data).to.exist;
+            });
+
+            it('should have the correct attributes', function () {
+                expect(body.data.type).to.equal('abtest');
+            });
+
+            it('should have a string id', function () {
+                expect(body.data.id).to.be.a('string');
+            });
+
+            it('should have an attributes object', function () {
+                expect(body.data.attributes).to.exist;
+            });
+
+            describe('attributes', function () {
+                let attributes;
+
+                beforeEach(function () {
+                    attributes = body.data.attributes;
+                });
+
+                it('should have a samplesize property', function () {
+                    expect(attributes.sampleSize).to.equal(4300);
+                });
+
+                assertAbTestMissingAttributes(function () {
+                    return body.data;
+                });
+
+                it('should have a name property', function () {
+                    expect(attributes.name).to.equal('abtest');
+                });
+            });
+
+            describe('relationships', function () {
+                let relationships;
+
+                beforeEach(function () {
+                    relationships = body.data.relationships;
+                });
+
+                it('should have groups', function () {
+                    expect(relationships.abtestGroup).to.exist;
+                });
+
+                it('should have the correct number of groups', function () {
+                    expect(relationships.abtestGroup.data.length).to.equal(2);
+                });
+
+                describe('groups', function () {
+                    describe('group 1', function () {
+                        let group;
+
+                        beforeEach(function () {
+                            group = relationships.abtestGroup.data[0];
+                        });
+
+                        it('should have an id property', function () {
+                            expect(group.id).to.be.a('string');
+                        });
+
+                        it('should have a name property', function () {
+                            expect(group.attributes.name).to.equal('group 1');
+                        });
+
+                        it('should have a slug property', function () {
+                            expect(group.attributes.slug).to.equal('group-1');
+                        });
+                    });
+
+                    describe('group 2', function () {
+                        let group;
+
+                        beforeEach(function () {
+                            group = relationships.abtestGroup.data[1];
+                        });
+
+                        it('should have an id property', function () {
+                            expect(group.id).to.be.a('string');
+                        });
+
+                        it('should have a name property', function () {
+                            expect(group.attributes.name).to.equal('group 2');
+                        });
+
+                        it('should have a slug property', function () {
+                            expect(group.attributes.slug).to.equal('group-2');
+                        });
+                    });
+                });
+            });
+        });
+    });
+
+    describe('invalid token', function () {
+        before(function (done) {
+            let userId;
+
+            logUserIn('test@test.com', 'password')
+                .then(function (loginData) {
+                    userId = loginData.relationships.user.id;
+
+                    request(url)
+                        .post(`/users/${userId}/abtests`)
+                        .set('authentication', `token ${userId}:INVALID`)
+                        .send({
+                            data: {
+                                attributes: {
+                                    name: 'abtest',
+                                    sampleSize: 4300
+                                },
+                                relationships: {
+                                    abtestGroup: [{
+                                        slug: 'group-1',
+                                        distribution: 0.5,
+                                        name: 'group 1'
+                                    }, {
+                                        slug: 'group-2',
+                                        distribution: 0.5,
+                                        name: 'group 2'
+                                    }]
+                                }
+                            }
+                        })
+                        .end(function (err, r) {
+                            res = r;
+                            done();
+                        });
+                });
+        });
+
+        assertErrorMessageReceived(function () {
+            return res;
+        });
+
+        it('should have the correct message', function () {
+            expect(res.body.error.message).to.equal('Invalid token');
+        });
+    });
+});

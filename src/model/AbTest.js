@@ -18,6 +18,12 @@ const AbTest = mongoose.model('AbTest', {
     },
     sampleSize: {
         type: Number
+    },
+    created: {
+        type: Date,
+        default: function () {
+            return Date.now();
+        }
     }
 });
 

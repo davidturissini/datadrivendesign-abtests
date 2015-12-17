@@ -6,59 +6,52 @@ const _ = require('lodash');
 // Client
 const authServiceClient = require('./../../client/authServiceClient');
 
-
 // Model
 const User = require('./../../model/User');
 
 module.exports = function (req) {
-
     return authServiceClient('/userSession', {
-            method: 'post',
-            body: req.body
-        })
-        .flatMapLatest((userSessionJson) => {
-            return rx.Observable.create(function (o) {
-                if (userSessionJson.error) {
-                    o.onError(userSessionJson.error);
+        method: 'post',
+        body: req.body
+    })
+    .flatMapLatest((userSessionJson) => {
+        return rx.Observable.create(function (o) {
+            if (userSessionJson.error) {
+                o.onError(userSessionJson.error);
+                return;
+            }
+
+            o.onNext(userSessionJson);
+            o.onCompleted();
+        });
+    })
+
+    .flatMapLatest((userSessionJson) => {
+        const userManagementId = userSessionJson.data.relationships.user.id;
+
+        return rx.Observable.create(function (o) {
+            User.findOne({
+                user_management_id: userManagementId
+            }, function (err, user) {
+                if (err) {
+                    o.onError(err);
                     return;
                 }
 
-                o.onNext(userSessionJson);
-                o.onCompleted();
+                const userData = _.clone(userSessionJson.data.relationships.user);
+                userData.id = user._id;
 
-            });
-        })
-
-        .flatMapLatest((userSessionJson) => {
-            const userManagementId = userSessionJson.data.relationships.user.id;
-
-            return rx.Observable.create(function (o) {
-                User.findOne({
-                    user_management_id: userManagementId
-                }, function (err, user) {
-                    if (err) {
-                        o.onError(err);
-                        return;
+                const userSessionData = {
+                    type: 'usersession',
+                    id: userSessionJson.data.id,
+                    relationships: {
+                        user: userData
                     }
+                };
 
-                    const userData = _.clone(userSessionJson.data.relationships.user);
-                    userData.id = user._id;
-                    
-                    const userSessionData = {
-                        data: {
-                            type: 'usersession',
-                            id: userSessionJson.data.id,
-                            relationships: {
-                                user: userData
-                            }
-                        }
-                    };
-
-                    o.onNext(userSessionData);
-                    o.onCompleted();
-                });
-
+                o.onNext(userSessionData);
+                o.onCompleted();
             });
         });
-
+    });
 };

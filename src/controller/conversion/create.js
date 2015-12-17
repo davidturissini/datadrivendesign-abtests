@@ -14,7 +14,7 @@ const impressionQueryAbTestGroup = require('./../../queries/impression/queryAbTe
 const abtestsFromRequestStream = require('./../../stream/abtest/fromRequest');
 
 module.exports = function (req) {
-    const participantKey = req.body.participant_id;
+    const participantKey = req.body.data.id;
     const abtestStream = abtestsFromRequestStream(req);
 
     return participantQueryByKey(participantKey)
@@ -39,7 +39,6 @@ module.exports = function (req) {
                 })
 
                 .flatMapLatest((abtestGroup) => {
-
                     return rx.Observable.create(function (o) {
                         Conversion.create({
                             participant: participant,
@@ -51,11 +50,11 @@ module.exports = function (req) {
 
                             o.onNext(conversion);
                             o.onCompleted();
-                        })
+                        });
                     });
                 });
-
-
+        })
+        .map((conversion) => {
+            return {};
         });
-
-}
+};

@@ -17,7 +17,7 @@ const Conversion = mongoose.model('Conversion', {
     date: {
         type: Date,
         default: function () {
-            return Date.now()
+            return Date.now();
         }
     }
 });

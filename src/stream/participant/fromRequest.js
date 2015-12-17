@@ -5,24 +5,43 @@ const rx = require('rx');
 // Action
 const createParticipantWithKey = require('./../../action/participant/createWithKey');
 
-// Model
-const Participant = require('./../../model/Participant');
-
 // Query
 const participantQueryWithKey = require('./../../queries/participant/queryByKey');
 
 module.exports = function (req) {
-    const key = req.body.participant_id;
-    
-    return participantQueryWithKey(key)
-        .flatMapLatest((participant) => {
-            if (!participant) {
-                return createParticipantWithKey(key);
+    const keyStream = rx.Observable.return(req.body)
+        .map((params) => {
+            if (!params.data) {
+                params.data = {};
             }
 
-            return rx.Observable.return(participant);
+            if (!params.data.attributes) {
+                params.data.attributes = {};
+            }
 
+            return params.data.attributes.key;
+        })
+        .map((key) => {
+            if (key === undefined) {
+                return null;
+            }
+
+            return key;
         });
 
+    const noKeyStrem = keyStream.filter((key) => {
+        return key === null;
+    });
 
-}
+    const hasKeyStream = keyStream.filter((key) => {
+        return key !== null;
+    })
+    .flatMapLatest((key) => {
+        return participantQueryWithKey(key);
+    });
+
+    return rx.Observable.merge(
+        noKeyStrem,
+        hasKeyStream
+    );
+};

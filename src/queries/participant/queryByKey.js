@@ -18,7 +18,7 @@ module.exports = function (key) {
 
             o.onNext(participant);
             o.onCompleted();
-        })
+        });
     });
 
 }

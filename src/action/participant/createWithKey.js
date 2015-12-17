@@ -7,7 +7,6 @@ const Participant = require('./../../model/Participant');
 
 
 module.exports = function (key) {
-
     return rx.Observable.create(function (o) {
         Participant.create({
             key: key
@@ -19,9 +18,6 @@ module.exports = function (key) {
 
             o.onNext(participant);
             o.onCompleted();
-
         });
-
     });
-
-}
+};

@@ -1,0 +1,17 @@
+{
+    "extends": "airbnb",
+    "env": {
+        "node": true,
+        "mocha": true
+    },
+    "rules": {
+        "strict": 0,
+        "quotes": [2, "single"],
+        "indent": [2, 4],
+        "func-names": 0,
+        "no-console": 0,
+        "comma-dangle": 0,
+        "no-unused-expressions": 0,
+        "no-unused-vars": [2, {"vars": "all", "args": "none"}]
+    }
+}
