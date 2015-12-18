@@ -9,11 +9,12 @@ const authServiceClient = require('./../../client/authServiceClient');
 
 // Model
 const User = require('./../../model/User');
+const ApiKey = require('./../../model/ApiKey');
 
 
 module.exports = function (req) {
     const user_id = req.params.user_id;
-    
+
     return rx.Observable.create(function (o) {
         User.findById(user_id, function (err, user) {
             if (err) {
@@ -27,18 +28,38 @@ module.exports = function (req) {
 
     })
     .flatMapLatest((user) => {
-        const path = `/users/${user.user_management_id}`;
+        return rx.Observable.create(function (o) {
+            ApiKey.findById(user.apiKey, function (err, apiKey) {
+                if (err) {
+                    o.onError(err);
+                }
 
-        return authServiceClient(path, {
-            method: 'get'
+                o.onNext(apiKey);
+                o.onCompleted();
+            });
         })
-        .map((userResp) => {
-            const userData = userResp.data;
-            const userObject = user.toObject();
-            userObject.id = userObject._id;
+        .flatMapLatest((apiKey) => {
+            const path = `/users/${user.user_management_id}`;
 
-            return _.extend(userData, userObject);
-        })
+            return authServiceClient(path, {
+                method: 'get'
+            })
+            .map((userResp) => {
+                const userData = userResp.data;
+                const userObject = user.toObject();
+                userObject.id = userObject._id;
+
+                const json = _.extend(userData, userObject);
+                json.relationships = {
+                    apikey: {
+                        type: 'apikey',
+                        id: apiKey._id
+                    }
+                };
+
+                return json;
+            });
+        });
     })
 
     .map((json) => {

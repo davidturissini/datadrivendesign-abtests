@@ -141,5 +141,27 @@ describe('POST /users', function () {
                 expect(attributes._id).to.not.exist;
             });
         });
+
+        describe('relationships', function () {
+            let relationships;
+
+            beforeEach(function () {
+                relationships = body.data.relationships;
+            });
+
+            it('should have an apikey', function () {
+                expect(relationships.apikey).to.exist;
+            });
+
+            describe('apikey', function () {
+                it('should have a type attribute', function () {
+                    expect(relationships.apikey.type).to.equal('apikey');
+                });
+
+                it('should have an id attribute', function () {
+                    expect(relationships.apikey.id).to.be.a('string');
+                });
+            });
+        });
     });
 });

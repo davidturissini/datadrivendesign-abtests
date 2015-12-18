@@ -13,6 +13,8 @@ const impressionQueryAbTestGroup = require('./../../queries/impression/queryAbTe
 
 // Model
 const Participant = require('./../../model/Participant');
+const User = require('./../../model/User');
+const AbTest = require('./../../model/AbTest');
 
 // Action
 const abtestAssignImpression = require('./../../action/abtest/assignImpression');
@@ -22,37 +24,78 @@ const participantAttributesObject = require('./../../formatters/participant/part
 
 const abtestGroupRestResponse = require('./../../stream/abtestGroup/abtestGroupRestResponse');
 
-module.exports = function (req) {
-    const participantFromRequestStream = createParticipantFromRequestStream(req);
-    const participantExistsStream = participantFromRequestStream.filter((p) => {
-        return p;
-    });
+function validateApiKey(apiKey, abtestId) {
+    return rx.Observable.create(function (o) {
+        if (typeof apiKey !== 'string') {
+            o.onError('Invalid API Key');
+        }
 
-    const createParticipantStream = participantFromRequestStream.filter((p) => {
-        return p === null;
+        User.findOne({
+            apiKey: apiKey,
+        }, function (err, user) {
+            if (err) {
+                o.onError(err);
+            }
+
+            o.onNext(user);
+            o.onCompleted();
+        });
     })
-    .flatMapLatest(() => {
+    .flatMapLatest((user) => {
         return rx.Observable.create(function (o) {
-            Participant.create({
-                key: mongoose.Types.ObjectId()
-            }, function (err, participant) {
+            AbTest.findOne({
+                user: user
+            }, function (err, abtest) {
                 if (err) {
                     o.onError(err);
                 }
 
-                o.onNext(participant);
+                if (!abtest) {
+                    o.onError('Invalid API Key');
+                }
+
+                o.onNext(abtest);
                 o.onCompleted();
             });
         });
     });
+}
 
-    return rx.Observable.merge(
-        participantExistsStream,
-        createParticipantStream
-    )
-    .flatMapLatest((participant) => {
-        return abtestFromRequestStream(req)
-            .flatMapLatest((abtest) => {
+
+module.exports = function (req) {
+    const apiKey = req.query.api_key;
+    const abtestId = req.params.abtest_id;
+
+    return validateApiKey(apiKey, abtestId)
+        .flatMapLatest((abtest) => {
+            const participantFromRequestStream = createParticipantFromRequestStream(req);
+            const participantExistsStream = participantFromRequestStream.filter((p) => {
+                return p;
+            });
+
+            const createParticipantStream = participantFromRequestStream.filter((p) => {
+                return p === null;
+            })
+            .flatMapLatest(() => {
+                return rx.Observable.create(function (o) {
+                    Participant.create({
+                        key: mongoose.Types.ObjectId()
+                    }, function (err, participant) {
+                        if (err) {
+                            o.onError(err);
+                        }
+
+                        o.onNext(participant);
+                        o.onCompleted();
+                    });
+                });
+            });
+
+            return rx.Observable.merge(
+                participantExistsStream,
+                createParticipantStream
+            )
+            .flatMapLatest((participant) => {
                 const findImpressionsStream = abtestQueryImpressionWithParticipant(abtest, participant);
 
                 const notAMemberStream = findImpressionsStream.filter((impression) => {
@@ -88,5 +131,5 @@ module.exports = function (req) {
                         return abtestGroupData;
                     });
             });
-    });
+        });
 };

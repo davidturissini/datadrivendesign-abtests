@@ -8,6 +8,7 @@ const authServiceClient = require('./../../client/authServiceClient');
 
 // Model
 const User = require('./../../model/User');
+const ApiKey = require('./../../model/ApiKey');
 
 module.exports = function (req) {
     return rx.Observable.return(req.body)
@@ -52,30 +53,49 @@ module.exports = function (req) {
             };
 
             return rx.Observable.create(function (o) {
-                User.create(userParams, function (err, user) {
+                ApiKey.create({}, function (err, apikey) {
                     if (err) {
                         o.onError(err);
-                        return;
                     }
 
-                    o.onNext(user);
+                    o.onNext(apikey);
                     o.onCompleted();
                 });
             })
-            .map((user) => {
-                const userObject = _.omit(user.toObject(),
-                    '_id',
-                    '__v',
-                    'user_management_id'
-                );
+            .flatMapLatest((apiKey) => {
+                userParams.apiKey = apiKey;
+                return rx.Observable.create(function (o) {
+                    User.create(userParams, function (err, user) {
+                        if (err) {
+                            o.onError(err);
+                            return;
+                        }
 
-                const attributes = _.extend(userData, userObject);
+                        o.onNext(user);
+                        o.onCompleted();
+                    });
+                })
+                .map((user) => {
+                    const userObject = _.omit(user.toObject(),
+                        '_id',
+                        '__v',
+                        'user_management_id'
+                    );
 
-                return {
-                    type: 'user',
-                    id: user._id,
-                    attributes: _.omit(attributes, '_id')
-                };
+                    const attributes = _.extend(userData, userObject);
+
+                    return {
+                        type: 'user',
+                        id: user._id,
+                        attributes: _.omit(attributes, '_id'),
+                        relationships: {
+                            apikey: {
+                                type: 'apikey',
+                                id: apiKey._id
+                            }
+                        }
+                    };
+                });
             });
         });
 };

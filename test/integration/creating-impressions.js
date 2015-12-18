@@ -5,47 +5,62 @@ const chai = require('chai');
 const expect = chai.expect;
 const url = 'http://127.0.0.1:4000';
 const createAbTest = require('./../helper/create-ab-test');
-
+const logUserIn = require('./../helper/user-login');
 const abtestGroupAssertType = require('./../assert/abtestGroup/assertType');
 
 describe('creating impression', function () {
     let res;
     let abtestId;
+    let userApiKey;
 
     describe('successful requests', function () {
         describe('when sent with no participant object', function () {
             before(function (done) {
-                createAbTest('test@test.com', 'password', {
-                    attributes: {
-                        name: 'abtest',
-                        sampleSize: 4300
-                    },
-                    relationships: {
-                        abtestGroup: [{
-                            slug: 'group-1',
-                            distribution: 0.5,
-                            name: 'group 1'
-                        }, {
-                            slug: 'group-2',
-                            distribution: 0.5,
-                            name: 'group 2'
-                        }]
-                    }
-                })
-                .then(function (abtestData) {
-                    abtestId = abtestData.data.id;
-
-                    request(url)
-                        .post(`/abtests/${abtestId}/impressions`)
-                        .end(function (err, r) {
-                            res = r;
-                            done();
+                logUserIn('test@test.com', 'password')
+                    .then(function (loginData) {
+                        return new Promise(function (resolve, rej) {
+                            const userId = loginData.relationships.user.id;
+                            return request(url)
+                                .get(`/users/${userId}`)
+                                .end(function (err, r) {
+                                    resolve(r.body.data.relationships.apikey.id);
+                                });
                         });
-                })
-                .catch((e) => {
-                    console.log(e);
+                    })
+                    .then(function (apikey) {
+                        userApiKey = apikey;
+                        createAbTest('test@test.com', 'password', {
+                            attributes: {
+                                name: 'abtest',
+                                sampleSize: 4300
+                            },
+                            relationships: {
+                                abtestGroup: [{
+                                    slug: 'group-1',
+                                    distribution: 0.5,
+                                    name: 'group 1'
+                                }, {
+                                    slug: 'group-2',
+                                    distribution: 0.5,
+                                    name: 'group 2'
+                                }]
+                            }
+                        })
+                        .then(function (abtestData) {
+                            abtestId = abtestData.data.id;
+
+                            request(url)
+                                .post(`/abtests/${abtestId}/impressions?api_key=${apikey}`)
+                                .end(function (err, r) {
+                                    res = r;
+                                    done();
+                                });
+                        })
+                        .catch((e) => {
+                            console.log(e);
+                        });
+                    });
                 });
-            });
 
             it('should have a status 200', function () {
                 expect(res.statusCode).to.equal(200);
@@ -109,7 +124,7 @@ describe('creating impression', function () {
 
                             before(function (done) {
                                 request(url)
-                                    .post(`/abtests/${abtestId}/impressions`)
+                                    .post(`/abtests/${abtestId}/impressions?api_key=${userApiKey}`)
                                     .send({
                                         data: {
                                             type: 'participant',
@@ -136,7 +151,7 @@ describe('creating impression', function () {
 
                     before(function (done) {
                         request(url)
-                            .post(`/abtests/${abtestId}/impressions`)
+                            .post(`/abtests/${abtestId}/impressions?api_key=${userApiKey}`)
                             .end(function (err, r) {
                                 anotherRequest = r;
                                 done();
@@ -153,7 +168,7 @@ describe('creating impression', function () {
 
                     before(function (done) {
                         request(url)
-                            .post(`/abtests/${abtestId}/impressions`)
+                            .post(`/abtests/${abtestId}/impressions?api_key=${userApiKey}`)
                             .end(function (err, r) {
                                 anotherRequest = r;
                                 done();
