@@ -8,41 +8,56 @@ const createAbTest = require('./../helper/create-ab-test');
 const logUserIn = require('./../helper/user-login');
 const createImpression = require('./../helper/create-impression');
 
-describe('creating impression', function () {
+describe('creating conversion', function () {
     let abtestId;
     let res;
     let groupId;
+    let userApiKey;
 
     describe('successful requests', function () {
         describe('when sent with no participant object', function () {
             before(function (done) {
-                createAbTest('test@test.com', 'password', {
-                    attributes: {
-                        name: 'abtest',
-                        sampleSize: 2
-                    },
-                    relationships: {
-                        abtestGroup: [{
-                            slug: 'group-1',
-                            distribution: 0.5,
-                            name: 'group 1'
-                        }, {
-                            slug: 'group-2',
-                            distribution: 0.5,
-                            name: 'group 2'
-                        }]
-                    }
-                })
-                .then(function (abtestData) {
-                    abtestId = abtestData.data.id;
-
-                    return createImpression()
-                        .then((data) => {
-                            groupId = data.groupId;
-                            res = data.impressionsResponse;
-                            done();
+                logUserIn('test@test.com', 'password')
+                    .then(function (loginData) {
+                        return new Promise(function (resolve, rej) {
+                            const userId = loginData.relationships.user.id;
+                            return request(url)
+                                .get(`/users/${userId}`)
+                                .end(function (err, r) {
+                                    resolve(r.body.data.relationships.apikey.id);
+                                });
                         });
-                });
+                    })
+                    .then((apikey) => {
+                        userApiKey = apikey;
+                        createAbTest('test@test.com', 'password', {
+                            attributes: {
+                                name: 'abtest',
+                                sampleSize: 2
+                            },
+                            relationships: {
+                                abtestGroup: [{
+                                    slug: 'group-1',
+                                    distribution: 0.5,
+                                    name: 'group 1'
+                                }, {
+                                    slug: 'group-2',
+                                    distribution: 0.5,
+                                    name: 'group 2'
+                                }]
+                            }
+                        })
+                        .then(function (abtestData) {
+                            abtestId = abtestData.data.id;
+
+                            return createImpression(abtestData.data, userApiKey)
+                                .then((data) => {
+                                    groupId = data.groupId;
+                                    res = data.impressionsResponse;
+                                    done();
+                                });
+                        });
+                    });
             });
 
             it('should have a status 200', function () {
@@ -64,7 +79,7 @@ describe('creating impression', function () {
                             const userSessionId = loginData.id;
 
                             request(url)
-                                .get(`/users/${userId}/abtests`)
+                                .get(`/users/${userId}/abtests?api_key=${userApiKey}`)
                                 .set('authentication', `token ${userId}:${userSessionId}`)
                                 .send()
                                 .end(function (err, r) {

@@ -1,10 +1,14 @@
 'use strict';
 
+const mongodb = require('mongodb');
+
 const request = require('supertest');
 const chai = require('chai');
 const expect = chai.expect;
 const url = 'http://127.0.0.1:4000';
 const logUserIn = require('./../helper/user-login');
+
+const connectAbtestDb = require('./../helper/connect-abtest-db');
 
 // asserts
 const assertErrorMessageReceived = require('./../assert/errorMessageReceived');
@@ -12,10 +16,10 @@ const assertAbTestMissingAttributes = require('./../assert/abtest/assertMissingA
 
 describe('creating ab test', function () {
     let res;
+    let userId;
 
     describe('successful requests', function () {
         before(function (done) {
-            let userId;
             let userSessionId;
 
             logUserIn('test@test.com', 'password')
@@ -54,6 +58,122 @@ describe('creating ab test', function () {
 
         it('should have a status 200', function () {
             expect(res.statusCode).to.equal(200);
+        });
+
+        describe('database', function () {
+            let mongoabtest;
+
+            beforeEach(function (done) {
+                connectAbtestDb()
+                    .subscribe((db) => {
+                        mongoabtest = db.collection('abtests').findOne({
+                            user: new mongodb.ObjectID(userId)
+                        }, function (err, abtest) {
+                            mongoabtest = abtest;
+                            done();
+                        });
+                    });
+            });
+
+            it('should have an ab test', function () {
+                expect(mongoabtest).to.exist;
+            });
+
+            it('should have the correct name', function () {
+                expect(mongoabtest.name).to.equal('abtest');
+            });
+
+            it('should have the correct sampleSize', function () {
+                expect(mongoabtest.sampleSize).to.equal(4300);
+            });
+
+            describe('abtest groups', function () {
+                let mongoAbtestGroups;
+
+                beforeEach(function (done) {
+                    connectAbtestDb()
+                        .subscribe((db) => {
+                            mongoabtest = db.collection('abtestgroups').find({
+                                abtest: new mongodb.ObjectID(mongoabtest._id)
+                            }).toArray(function (err, abtestGroups) {
+                                mongoAbtestGroups = abtestGroups;
+                                done();
+                            });
+                        });
+                });
+
+                it('should have two abtestgroups', function () {
+                    expect(mongoAbtestGroups.length).to.equal(2);
+                });
+
+                describe('first abtest group', function () {
+                    let group;
+
+                    beforeEach(function () {
+                        group = mongoAbtestGroups[0];
+                    });
+
+                    it('should have the correct name', function () {
+                        expect(group.name).to.equal('group 1');
+                    });
+
+                    it('should have the correct slug', function () {
+                        expect(group.slug).to.equal('group-1');
+                    });
+
+                    it('should have the correct distribution', function () {
+                        expect(group.distribution).to.equal(0.5);
+                    });
+                });
+
+                describe('second abtest group', function () {
+                    let group;
+
+                    beforeEach(function () {
+                        group = mongoAbtestGroups[1];
+                    });
+
+                    it('should have the correct name', function () {
+                        expect(group.name).to.equal('group 2');
+                    });
+
+                    it('should have the correct slug', function () {
+                        expect(group.slug).to.equal('group-2');
+                    });
+
+                    it('should have the correct distribution', function () {
+                        expect(group.distribution).to.equal(0.5);
+                    });
+                });
+            });
+
+            describe('abtest state', function () {
+                let mongoAbtestState;
+
+                beforeEach(function (done) {
+                    connectAbtestDb()
+                        .subscribe((db) => {
+                            mongoabtest = db.collection('abteststates').findOne({
+                                abtest: new mongodb.ObjectID(mongoabtest._id)
+                            }, function (err, abtestState) {
+                                mongoAbtestState = abtestState;
+                                done();
+                            });
+                        });
+                });
+
+                it('should have an abtest state', function () {
+                    expect(mongoAbtestState).to.exist;
+                });
+
+                it('should have the correct status', function () {
+                    expect(mongoAbtestState.status).to.equal('active');
+                });
+
+                it('should have a date', function () {
+                    expect(mongoAbtestState.date).to.exist;
+                });
+            });
         });
 
         describe('response', function () {

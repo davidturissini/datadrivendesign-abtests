@@ -4,6 +4,10 @@ const mongoose = require('mongoose');
 
 
 const AbTestGroup = mongoose.model('AbTestGroup', {
+    index: {
+        type: Number,
+        required: true
+    },
     name: {
         type: String,
         default: function () {

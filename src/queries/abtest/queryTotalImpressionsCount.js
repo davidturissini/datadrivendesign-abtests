@@ -2,17 +2,19 @@
 
 const rx = require('rx');
 
-// Queries
-const abtestQueryGroups = require('./../../queries/abtest/queryGroups');
-const abtestGroupQueryImpressionsCount = require('./../../queries/abtestGroup/queryImpressionsCount');
+const Impression = require('./../../model/Impression');
 
 module.exports = function (abtest) {
+    return rx.Observable.create(function (o) {
+        Impression.count({
+            abtest: abtest
+        }, function (err, count) {
+            if (err) {
+                o.onError(err);
+            }
 
-    return abtestQueryGroups(abtest)
-        .flatMap((abtestGroup) => {
-            return abtestGroupQueryImpressionsCount(abtestGroup)
-        })
-        .reduce((seed, count) => {
-            return seed + count;
-        }, 0);
-}
+            o.onNext(count);
+            o.onCompleted();
+        });
+    });
+};

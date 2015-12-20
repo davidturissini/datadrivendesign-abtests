@@ -3,24 +3,28 @@
 const request = require('supertest');
 const chai = require('chai');
 const expect = chai.expect;
-const url = 'http://127.0.0.1:4000';
 
-const mongodb = require('mongodb');
+const abtesturl = require('./../helper/abtest-url');
+const connectUsersDb = require('./../helper/connect-users-db');
+const connectAbtestDb = require('./../helper/connect-abtest-db');
 
 describe('POST /users', function () {
     let res;
 
     before(function (done) {
-        request(url)
-            .post('/users')
-            .send({
-                username: 'test@test.com',
-                password: 'password',
-                confirm: 'password'
-            })
-            .end(function (err, r) {
-                res = r;
-                done();
+        abtesturl()
+            .subscribe((url) => {
+                request(url)
+                    .post('/users')
+                    .send({
+                        username: 'test@test.com',
+                        password: 'password',
+                        confirm: 'password'
+                    })
+                    .end(function (err, r) {
+                        res = r;
+                        done();
+                    });
             });
     });
 
@@ -33,7 +37,8 @@ describe('POST /users', function () {
         let abtestUser;
 
         before(function () {
-            return mongodb.connect('mongodb://localhost/test')
+            return connectUsersDb()
+                .toPromise()
                 .then(function (db) {
                     return db.collection('users').findOne({
                         username: 'test@test.com'
@@ -42,7 +47,8 @@ describe('POST /users', function () {
                 .then(function (user) {
                     mongoUser = user;
 
-                    return mongodb.connect('mongodb://localhost/ddd-test')
+                    return connectAbtestDb()
+                        .toPromise()
                         .then((abtestDb) => {
                             return abtestDb.collection('users').findOne({
                                 user_management_id: mongoUser._id.toString()

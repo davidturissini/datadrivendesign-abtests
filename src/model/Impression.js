@@ -5,6 +5,12 @@ const mongoose = require('mongoose');
 
 const Impression = mongoose.model('Impression', {
 
+    abtest: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'AbTest',
+        required: true
+    },
+
     abtestGroup: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'AbTestGroup',
@@ -23,7 +29,7 @@ const Impression = mongoose.model('Impression', {
             return Date.now()
         }
     }
-    
+
 });
 
 

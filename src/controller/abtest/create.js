@@ -56,7 +56,8 @@ module.exports = function (req) {
 
             .flatMapLatest((abtest) => {
                 return rx.Observable.create(function (o) {
-                    abtestGroupsData.forEach(function (abtestGroupData) {
+                    abtestGroupsData.forEach(function (abtestGroupData, index) {
+                        abtestGroupData.index = index;
                         o.onNext(abtestGroupData);
                     });
 

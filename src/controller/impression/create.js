@@ -5,7 +5,6 @@ const mongoose = require('mongoose');
 
 // Streams
 const createParticipantFromRequestStream = require('./../../stream/participant/fromRequest');
-const abtestFromRequestStream = require('./../../stream/abtest/fromRequest');
 
 // Query
 const abtestQueryImpressionWithParticipant = require('./../../queries/abtest/queryImpressionWithParticipant');
@@ -13,8 +12,6 @@ const impressionQueryAbTestGroup = require('./../../queries/impression/queryAbTe
 
 // Model
 const Participant = require('./../../model/Participant');
-const User = require('./../../model/User');
-const AbTest = require('./../../model/AbTest');
 
 // Action
 const abtestAssignImpression = require('./../../action/abtest/assignImpression');
@@ -24,43 +21,7 @@ const participantAttributesObject = require('./../../formatters/participant/part
 
 const abtestGroupRestResponse = require('./../../stream/abtestGroup/abtestGroupRestResponse');
 
-function validateApiKey(apiKey, abtestId) {
-    return rx.Observable.create(function (o) {
-        if (typeof apiKey !== 'string') {
-            o.onError('Invalid API Key');
-        }
-
-        User.findOne({
-            apiKey: apiKey,
-        }, function (err, user) {
-            if (err) {
-                o.onError(err);
-            }
-
-            o.onNext(user);
-            o.onCompleted();
-        });
-    })
-    .flatMapLatest((user) => {
-        return rx.Observable.create(function (o) {
-            AbTest.findOne({
-                user: user
-            }, function (err, abtest) {
-                if (err) {
-                    o.onError(err);
-                }
-
-                if (!abtest) {
-                    o.onError('Invalid API Key');
-                }
-
-                o.onNext(abtest);
-                o.onCompleted();
-            });
-        });
-    });
-}
-
+const validateApiKey = require('./../../stream/apikey/validatedWithIdAndAbtestId');
 
 module.exports = function (req) {
     const apiKey = req.query.api_key;
