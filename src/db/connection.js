@@ -1,10 +1,16 @@
 'use strict';
 
-const rx = require('rx');
 const mongoose = require('mongoose');
 
+// Stream
+const defaultMongoConnectionStringStream = require('./../config/mongoConnectionString');
 
-module.exports = rx.Observable.return('mongodb://localhost/ddd-test')   
-    .map((mongoPath) => {
-        mongoose.connect(mongoPath);;
+
+function factory(mongoConnectionStringStream) {
+    return mongoConnectionStringStream.map((mongoPath) => {
+        mongoose.connect(mongoPath);
+        console.log(`Mongoose connected at ${mongoPath}`);
     });
+}
+
+module.exports = factory(defaultMongoConnectionStringStream);

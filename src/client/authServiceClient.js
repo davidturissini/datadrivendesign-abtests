@@ -7,7 +7,7 @@ const crypto = require('crypto');
 const _ = require('lodash');
 
 // Stream
-const configStream = require('./../stream/config/services');
+const configStream = require('./../config/config');
 
 const defaults = {
     method: 'get',

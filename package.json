@@ -5,7 +5,8 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
-    "test": "mocha test/integration/integration.js"
+    "start:test": "source ./environment/test.profile && npm start",
+    "test": "source ./environment/test.profile && mocha test/integration/integration.js"
   },
   "author": "",
   "license": "ISC",

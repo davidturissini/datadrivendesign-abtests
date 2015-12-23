@@ -31,6 +31,7 @@ module.exports = function (abtest) {
                     abtestState: {
                         type: 'abteststate',
                         data: {
+                            date: abtestState.date,
                             status: abtestState.status
                         }
                     }

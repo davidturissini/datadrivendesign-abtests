@@ -1,27 +1,28 @@
 'use strict';
 
 const rx = require('rx');
-const fs = require('fs');
 
 function createServicesConfigStream() {
-
     return rx.Observable.create(function (o) {
-        fs.readFile('./src/config/services.json', function (err, contents) {
-
-            if (err) {
-                o.onError(err);
+        o.onNext({
+            'user-management': {
+                host: 'localhost',
+                port: 4100,
+                protocol: 'http',
+                app_key: '56578efaf427032f0620c353',
+                app_secret: '$2a$10$3oIETVvpMtgktgSgt4xdpO'
+            },
+            database: {
+                host: process.env.ABTEST_MONGO_HOST,
+                database: process.env.ABTEST_MONGO_DB,
+                protocol: 'mongodb'
             }
-
-            const json = JSON.parse(contents.toString());
-            o.onNext(json);
-            o.onCompleted();
-
         });
+
+        o.onCompleted();
     })
     .replay(undefined, 1)
     .refCount();
-
 }
-
 
 module.exports = createServicesConfigStream();
