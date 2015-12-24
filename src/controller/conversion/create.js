@@ -17,7 +17,7 @@ const validateApiKey = require('./../../stream/apikey/validatedWithIdAndAbtestId
 
 
 module.exports = function (req) {
-    const participantKey = req.body.data.id;
+    const participantKey = req.body.data.attributes.key;
     const abtestStream = abtestsFromRequestStream(req);
 
     return validateApiKey(req.query.api_key, req.params.abtest_id)

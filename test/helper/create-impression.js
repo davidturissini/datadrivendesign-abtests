@@ -19,7 +19,9 @@ module.exports = function (abtest, apikey) {
                     .send({
                         data: {
                             type: 'participant',
-                            id: participantId
+                            attributes: {
+                                key: participantId
+                            }
                         }
                     })
                     .end(function (e, impressionsResponse) {
