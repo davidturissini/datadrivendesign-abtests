@@ -11,7 +11,7 @@ const queryAbtestGroupConversionsCount = require('./../../queries/abtestGroup/qu
 
 // formatters
 const abtestToJsonFormatter = require('./../../formatters/abtest/abTestAttributesObject');
-const abtestGroupToJsonFormatter = require('./../../formatters/abtestGroup/abTestGroupAttributesObject');
+const abtestGroupToJsonFormatter = require('./../../formatters/abtestGroup/abtestGroupAttributesObject');
 
 
 module.exports = function (abtestGroup) {
