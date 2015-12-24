@@ -6,8 +6,8 @@ const mongodb = require('mongodb');
 
 module.exports = function () {
     return rx.Observable.create(function (o) {
-        const dbhost = process.env.USER_MONGO_HOST_TEST;
-        const db = process.env.USER_MONGO_DB_TEST;
+        const dbhost = process.env.USER_MONGO_HOST;
+        const db = process.env.USER_MONGO_DB;
 
         if (!dbhost || !db) {
             o.onError('Missing database host and db.');

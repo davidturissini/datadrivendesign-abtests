@@ -1,11 +1,11 @@
 'use strict';
 
-const mongodb = require('mongodb');
+const connectUsersDB = require('./../helper/connect-users-db');
 
 describe('Ab test api', function () {
     after(function (done) {
-        return mongodb.connect('mongodb://localhost/test')
-            .then(function (db) {
+        connectUsersDB()
+            .subscribe(function (db) {
                 db.collection('users').remove({});
                 done();
             });
