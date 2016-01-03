@@ -4,7 +4,7 @@
   "description": "",
   "main": "src/index.js",
   "scripts": {
-    "start": "node src/index.js",
+    "start": "forever start --spinSleepTime 10000 src/index.js",
     "start:test": "source ./environment/test.profile && npm start",
     "test": "source ./environment/test.profile && mocha test/integration/integration.js"
   },
