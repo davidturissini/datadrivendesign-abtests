@@ -57,7 +57,10 @@ describe('POST /users', function () {
                         .then((aUser) => {
                             abtestUser = aUser;
                         });
-                });
+                })
+                .catch(function (err) {
+                    console.log(err);
+                })
         });
 
         it('should have saved an abtest user', function () {

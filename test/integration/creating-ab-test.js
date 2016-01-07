@@ -5,7 +5,7 @@ const mongodb = require('mongodb');
 const request = require('supertest');
 const chai = require('chai');
 const expect = chai.expect;
-const url = 'http://127.0.0.1:4000';
+const url = 'http://localhost:4000';
 const logUserIn = require('./../helper/user-login');
 
 const connectAbtestDb = require('./../helper/connect-abtest-db');

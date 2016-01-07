@@ -6,7 +6,8 @@
   "scripts": {
     "start": "forever start --spinSleepTime 10000 src/index.js",
     "start:test": "source ./environment/test.profile && npm start",
-    "test": "source ./environment/test.profile && mocha test/integration/integration.js"
+    "test": "mocha test/integration/integration.js",
+    "stop": "forever stop ./src/index.js"
   },
   "author": "",
   "license": "ISC",
