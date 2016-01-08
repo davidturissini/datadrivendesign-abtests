@@ -100,8 +100,10 @@ describe('creating impression', function () {
 
             describe('data', function () {
                 let abtestGroupData;
+                let firstResponse;
 
                 beforeEach(function () {
+                    firstResponse = res;
                     abtestGroupData = res.body.data;
                 });
 
@@ -117,8 +119,10 @@ describe('creating impression', function () {
                     expect(abtestGroupData.relationships).to.exist;
                 });
 
-                it('should have assigned the correct group', function () {
-                    expect(abtestGroupData.attributes.slug).to.equal('group-1');
+                it('should have assigned a group', function () {
+                    const slug = abtestGroupData.attributes.slug;
+                    const equal = (slug === 'group-1' || slug === 'group-2');
+                    expect(equal).to.equal(true);
                 });
 
                 describe('relationships', function () {
@@ -171,7 +175,7 @@ describe('creating impression', function () {
                             });
 
                             it('should assign the same group', function () {
-                                expect(secondResponse.body.data.attributes.slug).to.equal('group-1');
+                                expect(secondResponse.body.data.attributes.slug).to.equal(firstResponse.body.data.attributes.slug);
                             });
                         });
                     });
@@ -193,7 +197,9 @@ describe('creating impression', function () {
                     });
 
                     it('should assign to the correct group', function () {
-                        expect(anotherRequest.body.data.attributes.slug).to.equal('group-2');
+                        const slug = anotherRequest.body.data.attributes.slug;
+                        const equal = (slug === 'group-1' || slug === 'group-2');
+                        expect(equal).to.equal(true);
                     });
                 });
 
@@ -213,7 +219,9 @@ describe('creating impression', function () {
                     });
 
                     it('should assign to the correct group', function () {
-                        expect(anotherRequest.body.data.attributes.slug).to.equal('group-1');
+                        const slug = anotherRequest.body.data.attributes.slug;
+                        const equal = (slug === 'group-1' || slug === 'group-2');
+                        expect(equal).to.equal(true);
                     });
                 });
             });

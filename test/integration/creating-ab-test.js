@@ -39,11 +39,9 @@ describe('creating ab test', function () {
                                 relationships: {
                                     abtestGroup: [{
                                         slug: 'group-1',
-                                        distribution: 0.5,
                                         name: 'group 1'
                                     }, {
                                         slug: 'group-2',
-                                        distribution: 0.5,
                                         name: 'group 2'
                                     }]
                                 }
@@ -121,8 +119,8 @@ describe('creating ab test', function () {
                         expect(group.slug).to.equal('group-1');
                     });
 
-                    it('should have the correct distribution', function () {
-                        expect(group.distribution).to.equal(0.5);
+                    it('should not have a distribution', function () {
+                        expect(group.distribution).to.not.exist;
                     });
                 });
 
@@ -141,8 +139,8 @@ describe('creating ab test', function () {
                         expect(group.slug).to.equal('group-2');
                     });
 
-                    it('should have the correct distribution', function () {
-                        expect(group.distribution).to.equal(0.5);
+                    it('should not have a distribution', function () {
+                        expect(group.distribution).to.not.exist;
                     });
                 });
             });

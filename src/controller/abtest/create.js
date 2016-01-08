@@ -70,11 +70,6 @@ module.exports = function (req) {
                     return rx.Observable.create(function (o) {
                         attributes.abtest = abtest;
 
-                        if (typeof attributes.distribution !== 'number') {
-                            o.onError('Could not create ab test. Group "' + attributes.name + '" has an invalid distribution value: "' + attributes.distribution + '".');
-                            return;
-                        }
-
                         AbTestGroup.create(attributes, function (err, abtestGroup) {
                             if (err) {
                                 o.onError(err);

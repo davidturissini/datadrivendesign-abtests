@@ -13,6 +13,7 @@
   "license": "ISC",
   "dependencies": {
     "body-parser": "^1.14.1",
+    "chance": "^0.8.0",
     "cors": "^2.7.1",
     "expect": "^1.13.2",
     "express": "^4.13.3",

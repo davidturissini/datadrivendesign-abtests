@@ -1,6 +1,7 @@
 'use strict';
 
 const rx = require('rx');
+const Chance = require('chance');
 
 // Model
 const Impression = require('./../../model/Impression');
@@ -10,40 +11,23 @@ const AbTestState = require('./../../model/AbTestState');
 const abtestQueryGroups = require('./../../queries/abtest/queryGroups');
 const abTestQueryTotalImpressionsCount = require('./../../queries/abtest/queryTotalImpressionsCount');
 const abTestGroupQueryImpressionsCount = require('./../../queries/abtestGroup/queryImpressionsCount');
+const abtestQueryGroupsCount = require('./../../queries/abtest/queryAbTestGroupCount');
 
 module.exports = function (abtest, participant) {
     const totalImpressionsStream = abTestQueryTotalImpressionsCount(abtest);
 
     return totalImpressionsStream.flatMapLatest((totalAbtestPopulation) => {
-        const abtestGroupingsStream = abtestQueryGroups(abtest)
-            .flatMap((abtestGroup, index) => {
-                return abTestGroupQueryImpressionsCount(abtestGroup)
-                    .map((numImpressions) => {
-                        return {
-                            numImpressions: numImpressions,
-                            abtestGroup: abtestGroup
-                        };
-                    })
-                    .first();
+        return abtestQueryGroupsCount(abtest)
+            .flatMapLatest((numGroups) => {
+                const groupIndex = new Chance().integer({
+                    min: 0,
+                    max: numGroups - 1
+                });
+
+                return abtestQueryGroups(abtest).filter((abtestGroup, index) => {
+                    return index === groupIndex;
+                });
             });
-
-        return abtestGroupingsStream.filter((abtestGrouping, index) => {
-            const abtestGroup = abtestGrouping.abtestGroup;
-            const numImpressions = abtestGrouping.numImpressions;
-
-            if (totalAbtestPopulation === 0 && index === 0) {
-                return true;
-            }
-
-            const groupDistribution = abtestGroup.distribution;
-            const currentDistribution = numImpressions / totalAbtestPopulation;
-
-            return (currentDistribution <= groupDistribution);
-        })
-        .map((abtestGrouping) => {
-            return abtestGrouping.abtestGroup;
-        })
-        .first();
     })
 
     .flatMapLatest((abtestGroup) => {

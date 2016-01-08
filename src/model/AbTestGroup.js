@@ -18,10 +18,6 @@ const AbTestGroup = mongoose.model('AbTestGroup', {
         type: String,
         required: true
     },
-    distribution: {
-        type: Number,
-        required: true
-    },
     abtest: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'AbTest',
