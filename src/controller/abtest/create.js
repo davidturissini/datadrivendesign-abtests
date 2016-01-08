@@ -7,6 +7,7 @@ const _ = require('lodash');
 const AbTest = require('./../../model/AbTest');
 const AbTestGroup = require('./../../model/AbTestGroup');
 const AbTestState = require('./../../model/AbTestState');
+const AbTestControlGroupRelationship = require('./../../model/AbTestControlGroupRelationship');
 
 // Action
 const validateUserSessionFromRequest = require('./../../action/user/validateUserSessionFromRequest');
@@ -18,7 +19,13 @@ module.exports = function (req) {
         .flatMapLatest((user) => {
             const json = req.body;
             const abtestParams = json.data.attributes;
-            const abtestGroupsData = json.data.relationships.abtestGroup;
+
+            const abtestGroupControlData = json.data.relationships.abtestGroupControl.attributes;
+
+            const abtestGroupsData = json.data.relationships.abtestGroup.map((abtestGroupJSON) => {
+                return abtestGroupJSON.attributes;
+            }).concat(abtestGroupControlData);
+
 
             abtestParams.user = user;
 
@@ -65,6 +72,7 @@ module.exports = function (req) {
                 })
 
                 .flatMap((abtestGroupData) => {
+                    const isControl = (abtestGroupData === abtestGroupControlData);
                     const attributes = _.clone(abtestGroupData);
 
                     return rx.Observable.create(function (o) {
@@ -77,6 +85,30 @@ module.exports = function (req) {
 
                             o.onNext(abtestGroup);
                             o.onCompleted();
+                        });
+                    })
+
+                    .flatMapLatest((abtestGroup) => {
+                        return rx.Observable.create(function (o) {
+                            if (!isControl) {
+                                o.onNext(abtestGroup);
+                                o.onCompleted();
+                                return;
+                            }
+
+                            const relationshipAttributes = {
+                                abtestGroup: abtestGroup,
+                                abtest: abtest
+                            };
+
+                            AbTestControlGroupRelationship.create(relationshipAttributes, function (err, relationship) {
+                                if (err) {
+                                    o.onError(err);
+                                }
+
+                                o.onNext(abtestGroup);
+                                o.onCompleted();
+                            });
                         });
                     });
                 })

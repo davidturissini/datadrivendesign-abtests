@@ -37,12 +37,19 @@ describe('creating ab test', function () {
                                     sampleSize: 4300
                                 },
                                 relationships: {
+                                    abtestGroupControl: {
+                                        type: 'abtestgroup',
+                                        attributes: {
+                                            slug: 'group-1',
+                                            name: 'group 1'
+                                        }
+                                    },
                                     abtestGroup: [{
-                                        slug: 'group-1',
-                                        name: 'group 1'
-                                    }, {
-                                        slug: 'group-2',
-                                        name: 'group 2'
+                                        type: 'abtestgroup',
+                                        attributes: {
+                                            slug: 'group-2',
+                                            name: 'group 2'
+                                        }
                                     }]
                                 }
                             }
@@ -88,10 +95,11 @@ describe('creating ab test', function () {
             describe('abtest groups', function () {
                 let mongoAbtestGroups;
 
+
                 beforeEach(function (done) {
                     connectAbtestDb()
                         .subscribe((db) => {
-                            mongoabtest = db.collection('abtestgroups').find({
+                            db.collection('abtestgroups').find({
                                 abtest: new mongodb.ObjectID(mongoabtest._id)
                             }).toArray(function (err, abtestGroups) {
                                 mongoAbtestGroups = abtestGroups;
@@ -107,8 +115,17 @@ describe('creating ab test', function () {
                 describe('first abtest group', function () {
                     let group;
 
-                    beforeEach(function () {
-                        group = mongoAbtestGroups[0];
+                    beforeEach(function (done) {
+                        connectAbtestDb()
+                            .subscribe((db) => {
+                                db.collection('abtestgroups').find({
+                                    abtest: new mongodb.ObjectID(mongoabtest._id),
+                                    name: 'group 1'
+                                }).toArray(function (err, abtestGroups) {
+                                    group = abtestGroups[0];
+                                    done();
+                                });
+                            });
                     });
 
                     it('should have the correct name', function () {
@@ -127,8 +144,17 @@ describe('creating ab test', function () {
                 describe('second abtest group', function () {
                     let group;
 
-                    beforeEach(function () {
-                        group = mongoAbtestGroups[1];
+                    beforeEach(function (done) {
+                        connectAbtestDb()
+                            .subscribe((db) => {
+                                db.collection('abtestgroups').find({
+                                    abtest: new mongodb.ObjectID(mongoabtest._id),
+                                    name: 'group 2'
+                                }).toArray(function (err, abtestGroups) {
+                                    group = abtestGroups[0];
+                                    done();
+                                });
+                            });
                     });
 
                     it('should have the correct name', function () {
@@ -142,6 +168,26 @@ describe('creating ab test', function () {
                     it('should not have a distribution', function () {
                         expect(group.distribution).to.not.exist;
                     });
+                });
+            });
+
+            describe('abtest control group relationship', function () {
+                let abtestcontrolgrouprelationships;
+
+                beforeEach(function (done) {
+                    connectAbtestDb()
+                        .subscribe((db) => {
+                            mongoabtest = db.collection('abtestcontrolgrouprelationships').findOne({
+                                abtest: new mongodb.ObjectID(mongoabtest._id)
+                            }, function (err, abtestState) {
+                                abtestcontrolgrouprelationships = abtestState;
+                                done();
+                            });
+                        });
+                });
+
+                it('should have created a abtestcontrolgrouprelationships', function () {
+                    expect(abtestcontrolgrouprelationships).to.exist;
                 });
             });
 
@@ -224,20 +270,24 @@ describe('creating ab test', function () {
                     relationships = body.data.relationships;
                 });
 
+                it('should have a control', function () {
+                    expect(relationships.abtestGroupControl).to.exist;
+                });
+
                 it('should have groups', function () {
                     expect(relationships.abtestGroup).to.exist;
                 });
 
                 it('should have the correct number of groups', function () {
-                    expect(relationships.abtestGroup.data.length).to.equal(2);
+                    expect(relationships.abtestGroup.length).to.equal(1);
                 });
 
                 describe('groups', function () {
-                    describe('group 1', function () {
+                    describe('control', function () {
                         let group;
 
                         beforeEach(function () {
-                            group = relationships.abtestGroup.data[0];
+                            group = relationships.abtestGroupControl;
                         });
 
                         it('should have an id property', function () {
@@ -257,7 +307,7 @@ describe('creating ab test', function () {
                         let group;
 
                         beforeEach(function () {
-                            group = relationships.abtestGroup.data[1];
+                            group = relationships.abtestGroup[0];
                         });
 
                         it('should have an id property', function () {
