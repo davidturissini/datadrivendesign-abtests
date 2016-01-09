@@ -9,9 +9,12 @@ const createParticipantFromRequestStream = require('./../../stream/participant/f
 // Query
 const abtestQueryImpressionWithParticipant = require('./../../queries/abtest/queryImpressionWithParticipant');
 const impressionQueryAbTestGroup = require('./../../queries/impression/queryAbTestGroup');
+const queryAbTestState = require('./../../queries/abtest/queryAbTestState');
+const queryAbTestControlGroup = require('./../../queries/abtest/queryAbTestControlGroup');
 
 // Model
 const Participant = require('./../../model/Participant');
+const AbTestState = require('./../../model/AbTestState');
 
 // Action
 const abtestAssignImpression = require('./../../action/abtest/assignImpression');
@@ -57,25 +60,45 @@ module.exports = function (req) {
                 createParticipantStream
             )
             .flatMapLatest((participant) => {
-                const findImpressionsStream = abtestQueryImpressionWithParticipant(abtest, participant);
 
-                const notAMemberStream = findImpressionsStream.filter((impression) => {
-                    return !impression;
-                })
-                .flatMapLatest((data) => {
-                    return abtestAssignImpression(abtest, participant);
-                });
+                const abTestStateStream = queryAbTestState(abtest);
 
-                const alreadyAMemberStream = findImpressionsStream.filter((impression) => {
-                    return impression;
+                const activeStateStream = abTestStateStream.filter((abtestState) => {
+                    return abtestState.status === AbTestState.STATUS_ACTIVE;
                 })
-                .flatMapLatest((impression) => {
-                    return impressionQueryAbTestGroup(impression);
+                .flatMapLatest(() => {
+                    const findImpressionsStream = abtestQueryImpressionWithParticipant(abtest, participant);
+
+                    const notAMemberStream = findImpressionsStream.filter((impression) => {
+                        return !impression;
+                    })
+                    .flatMapLatest((data) => {
+                        return abtestAssignImpression(abtest, participant);
+                    });
+
+                    const alreadyAMemberStream = findImpressionsStream.filter((impression) => {
+                        return impression;
+                    })
+                    .flatMapLatest((impression) => {
+                        return impressionQueryAbTestGroup(impression);
+                    });
+
+                    return rx.Observable.merge(
+                        notAMemberStream,
+                        alreadyAMemberStream
+                    );
+                })
+
+                const completedStateStream = abTestStateStream.filter((abtestState) => {
+                    return abtestState.status === AbTestState.STATUS_COMPLETED;
+                })
+                .flatMapLatest(() => {
+                    return queryAbTestControlGroup(abtest);
                 });
 
                 return rx.Observable.merge(
-                        notAMemberStream,
-                        alreadyAMemberStream
+                        activeStateStream,
+                        completedStateStream
                     )
                     .flatMapLatest(function (group) {
                         return abtestGroupRestResponse(group);

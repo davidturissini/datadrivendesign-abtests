@@ -234,6 +234,7 @@ describe('creating impression', function () {
 
         describe('when an abtest has its target number of impressions', function () {
             let maxabtestid;
+            let userApiKey;
 
             before(function (done) {
                 logUserIn('test@test.com', 'password')
@@ -327,6 +328,44 @@ describe('creating impression', function () {
                 it('should have CLOSED state', function () {
                     expect(currentmongoagteststate.status).to.equal('completed');
                 });
+
+                describe('when an impression request is made after a test is CLOSED', function () {
+                    let groupSlugs;
+                    let groupSlugLen;
+
+                    before(function () {
+                        return abtesturl()
+                            .toPromise()
+                            .then(function (url) {
+                                groupSlugs = [];
+                                const promises = [1, 2, 3, 4, 5].map(function () {
+                                    return new Promise(function (resolve, reject) {
+                                        request(url)
+                                            .post(`/abtests/${maxabtestid}/impressions?api_key=${userApiKey}`)
+                                            .end(function (err, r) {
+                                                const groupSlug = r.body.data.attributes.slug;
+                                                groupSlugs.push(groupSlug);
+                                                resolve(groupSlug);
+                                            });
+                                    });
+                                });
+
+                                groupSlugLen = 0;
+
+                                return Promise.all(promises)
+                                    .then(function () {
+                                        groupSlugLen = groupSlugs.filter(function (slug) {
+                                            return slug === 'group-2';
+                                        }).length;
+                                    });
+                            });
+                    });
+
+                    it('should return the control group', function () {
+                        expect(groupSlugLen).to.equal(0);
+                    });
+                });
+
             });
         });
     });

@@ -35,6 +35,10 @@ module.exports = rx.Observable.create(function (o) {
         method: 'post',
         path: '/abtests/:abtest_id/conversions',
         handler: require('./../controller/conversion/create')
+    }, {
+        method: 'get',
+        path: '/users/:user_id/abtests/:abtest_id',
+        handler: require('./../controller/abtest/show')
     }];
 
     routes.forEach(function (route) {

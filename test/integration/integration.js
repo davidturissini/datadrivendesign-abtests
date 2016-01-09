@@ -15,6 +15,7 @@ describe('Ab test api', function () {
     require('./creating-usersession');
     require('./creating-ab-test');
     require('./getting-ab-tests');
+    require('./getting-abtest');
     require('./creating-impressions');
     require('./creating-conversions');
 });
