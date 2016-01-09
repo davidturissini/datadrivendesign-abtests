@@ -1,6 +1,10 @@
 'use strict';
 
+const rx = require('rx');
 const _ = require('lodash');
+
+const AbTestState = require('./../../model/AbTestState');
+const calculateAbTestResults = require('./../../action/abtest/calculateResults');
 
 // Queries
 const queryAbtestGroups = require('./../../queries/abtest/queryGroups');
@@ -22,11 +26,44 @@ module.exports = function (abtest) {
         });
 
     const abtestStateRestObjectStream = queryAbtestState(abtest);
+    const hasResultsStream = abtestStateRestObjectStream.filter((abtestState) => {
+        return (abtestState.status === AbTestState.STATUS_COMPLETED);
+    })
+    .flatMapLatest((abtestState) => {
+        return calculateAbTestResults(abtest);
+    })
+    .flatMapLatest((results) => {
+        return abtestGroupRestResponse(results.winner)
+            .map((json) => {
+                return {
+                    type: 'abtestresults',
+                    attributes: {
+                        confidence: results.confidence
+                    },
+                    relationships: {
+                        winnerAbTestGroup: json
+                    }
+                };
+            });
+    });
+
+    const noResultsStream = abtestStateRestObjectStream.filter((abtestState) => {
+        return (abtestState.status !== AbTestState.STATUS_COMPLETED);
+    })
+    .map(() => {
+        return {};
+    });
+
+    const resultsStream = rx.Observable.merge(
+        hasResultsStream,
+        noResultsStream
+    ).first();
 
     return abtestGroupRestObjectsStream.combineLatest(
         abtestControlGroupStream,
         abtestStateRestObjectStream,
-        function (groupsData, controlGroup, abtestState) {
+        resultsStream,
+        function (groupsData, controlGroup, abtestState, results) {
             const groupJson = groupsData.filter((abtestGroup) => {
                 return abtestGroup.id.toString() !== controlGroup.id.toString();
             });
@@ -45,6 +82,9 @@ module.exports = function (abtest) {
                             status: abtestState.status
                         }
                     }
+                },
+                included: {
+                    abtestResults: results
                 }
             };
         });

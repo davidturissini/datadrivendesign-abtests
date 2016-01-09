@@ -60,7 +60,6 @@ module.exports = function (req) {
                 createParticipantStream
             )
             .flatMapLatest((participant) => {
-
                 const abTestStateStream = queryAbTestState(abtest);
 
                 const activeStateStream = abTestStateStream.filter((abtestState) => {
@@ -87,7 +86,7 @@ module.exports = function (req) {
                         notAMemberStream,
                         alreadyAMemberStream
                     );
-                })
+                });
 
                 const completedStateStream = abTestStateStream.filter((abtestState) => {
                     return abtestState.status === AbTestState.STATUS_COMPLETED;

@@ -234,7 +234,6 @@ describe('creating impression', function () {
 
         describe('when an abtest has its target number of impressions', function () {
             let maxabtestid;
-            let userApiKey;
 
             before(function (done) {
                 logUserIn('test@test.com', 'password')
@@ -285,7 +284,7 @@ describe('creating impression', function () {
                                     .end(function (err, r) {
                                         request(url)
                                             .post(`/abtests/${maxabtestid}/impressions?api_key=${apikey}`)
-                                            .end(function (err, r) {
+                                            .end(function () {
                                                 done();
                                             });
                                     });
@@ -313,8 +312,8 @@ describe('creating impression', function () {
                                         created_at: -1,
                                         _id: -1
                                     }
-                                }).toArray(function (stateErr, abteststates) {
-                                    currentmongoagteststate = abteststates[0];
+                                }).toArray(function (stateErr, states) {
+                                    currentmongoagteststate = states[0];
                                     done();
                                 });
                             });
@@ -365,7 +364,6 @@ describe('creating impression', function () {
                         expect(groupSlugLen).to.equal(0);
                     });
                 });
-
             });
         });
     });

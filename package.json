@@ -15,6 +15,7 @@
     "body-parser": "^1.14.1",
     "chance": "^0.8.0",
     "cors": "^2.7.1",
+    "data-driven-design-ab-test-calculator": "git+https://github.com/davidturissini/datadrivendesign-calculator.git",
     "expect": "^1.13.2",
     "express": "^4.13.3",
     "lodash": "^3.10.1",

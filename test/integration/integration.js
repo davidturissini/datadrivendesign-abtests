@@ -18,4 +18,5 @@ describe('Ab test api', function () {
     require('./getting-abtest');
     require('./creating-impressions');
     require('./creating-conversions');
+    require('./calculating-abtest-results');
 });

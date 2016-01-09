@@ -10,7 +10,6 @@ const AbTestState = require('./../../model/AbTestState');
 // Queries
 const abtestQueryGroups = require('./../../queries/abtest/queryGroups');
 const abTestQueryTotalImpressionsCount = require('./../../queries/abtest/queryTotalImpressionsCount');
-const abTestGroupQueryImpressionsCount = require('./../../queries/abtestGroup/queryImpressionsCount');
 const abtestQueryGroupsCount = require('./../../queries/abtest/queryAbTestGroupCount');
 
 module.exports = function (abtest, participant) {
