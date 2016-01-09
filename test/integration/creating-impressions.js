@@ -43,14 +43,19 @@ describe('creating impression', function () {
                                 sampleSize: 4300
                             },
                             relationships: {
+                                abtestGroupControl: {
+                                    type: 'abtestgroup',
+                                    attributes: {
+                                        slug: 'group-1',
+                                        name: 'group 1'
+                                    }
+                                },
                                 abtestGroup: [{
-                                    slug: 'group-1',
-                                    distribution: 0.5,
-                                    name: 'group 1'
-                                }, {
-                                    slug: 'group-2',
-                                    distribution: 0.5,
-                                    name: 'group 2'
+                                    type: 'abtestgroup',
+                                    attributes: {
+                                        slug: 'group-2',
+                                        name: 'group 2'
+                                    }
                                 }]
                             }
                         })
@@ -254,14 +259,19 @@ describe('creating impression', function () {
                                 sampleSize: 2
                             },
                             relationships: {
+                                abtestGroupControl: {
+                                    type: 'abtestgroup',
+                                    attributes: {
+                                        slug: 'group-1',
+                                        name: 'group 1'
+                                    }
+                                },
                                 abtestGroup: [{
-                                    slug: 'group-1',
-                                    distribution: 0.5,
-                                    name: 'group 1'
-                                }, {
-                                    slug: 'group-2',
-                                    distribution: 0.5,
-                                    name: 'group 2'
+                                    type: 'abtestgroup',
+                                    attributes: {
+                                        slug: 'group-2',
+                                        name: 'group 2'
+                                    }
                                 }]
                             }
                         })

@@ -80,15 +80,15 @@ describe('Getting ab tests', function () {
                 });
 
                 it('should have the correct length', function () {
-                    expect(abtest.relationships.abtestGroup.data.length).to.equal(2);
+                    expect(abtest.relationships.abtestGroup.length).to.equal(1);
                 });
 
                 describe('groups', function () {
-                    describe('group 1', function () {
+                    describe('control', function () {
                         let group;
 
                         beforeEach(function () {
-                            group = abtest.relationships.abtestGroup.data[0];
+                            group = abtest.relationships.abtestGroupControl;
                         });
 
                         it('should have a type property', function () {
@@ -112,11 +112,11 @@ describe('Getting ab tests', function () {
                         });
                     });
 
-                    describe('group 2', function () {
+                    describe('abtest groups', function () {
                         let group;
 
                         beforeEach(function () {
-                            group = abtest.relationships.abtestGroup.data[1];
+                            group = abtest.relationships.abtestGroup[0];
                         });
 
                         it('should have a type property', function () {

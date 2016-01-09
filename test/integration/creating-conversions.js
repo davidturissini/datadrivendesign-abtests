@@ -36,14 +36,19 @@ describe('creating conversion', function () {
                                 sampleSize: 2
                             },
                             relationships: {
+                                abtestGroupControl: {
+                                    type: 'abtestgroup',
+                                    attributes: {
+                                        slug: 'group-1',
+                                        name: 'group 1'
+                                    }
+                                },
                                 abtestGroup: [{
-                                    slug: 'group-1',
-                                    distribution: 0.5,
-                                    name: 'group 1'
-                                }, {
-                                    slug: 'group-2',
-                                    distribution: 0.5,
-                                    name: 'group 2'
+                                    type: 'abtestgroup',
+                                    attributes: {
+                                        slug: 'group-2',
+                                        name: 'group 2'
+                                    }
                                 }]
                             }
                         })
@@ -89,7 +94,7 @@ describe('creating conversion', function () {
                                         return abtestData.id === abtestId;
                                     })
                                     .map((abtestData) => {
-                                        return abtestData.relationships.abtestGroup.data;
+                                        return abtestData.relationships.abtestGroup.concat(abtestData.relationships.abtestGroupControl);
                                     })
                                     .reduce((seed, val) => {
                                         return val;
