@@ -32,19 +32,11 @@ module.exports = function (abtest) {
     .flatMapLatest((abtestState) => {
         return calculateAbTestResults(abtest);
     })
-    .flatMapLatest((results) => {
-        return abtestGroupRestResponse(results.winner)
-            .map((json) => {
-                return {
-                    type: 'abtestresults',
-                    attributes: {
-                        confidence: results.confidence
-                    },
-                    relationships: {
-                        winnerAbTestGroup: json
-                    }
-                };
-            });
+    .map((results) => {
+        return {
+            type: 'abtestresults',
+            attributes: results
+        };
     });
 
     const noResultsStream = abtestStateRestObjectStream.filter((abtestState) => {

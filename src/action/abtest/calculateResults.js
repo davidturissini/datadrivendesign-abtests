@@ -61,8 +61,9 @@ module.exports = function (abtest) {
                             const winnerData = abtestCalculator.calculateWinner(controlStats.results, abtestGroupData.results);
                             const confidence = abtestCalculator.calculateConfidence(controlStats.results, abtestGroupData.results);
                             const winner = (winnerData === controlStats.results) ? controlGroup : abtestGroupData.abtestGroup;
+
                             return {
-                                winner: winner,
+                                winner_id: winner._id,
                                 confidence: confidence
                             };
                         });
