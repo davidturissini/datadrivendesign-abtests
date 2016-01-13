@@ -18,6 +18,7 @@
     "data-driven-design-ab-test-calculator": "git+https://github.com/davidturissini/datadrivendesign-calculator.git",
     "expect": "^1.13.2",
     "express": "^4.13.3",
+    "forever": "^0.15.1",
     "lodash": "^3.10.1",
     "mongoose": "^4.2.9",
     "node-babel": "^0.1.2",
