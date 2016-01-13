@@ -13,6 +13,11 @@ const User = mongoose.model('User', {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'ApiKey',
         required: true
+    },
+    pricingTier: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'PricingTier',
+        required: true
     }
 });
 
