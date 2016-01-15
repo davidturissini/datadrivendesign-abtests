@@ -1,14 +1,24 @@
 'use strict';
 
-const connectUsersDB = require('./../helper/connect-users-db');
+const usersDbStream = require('./../db/user');
+const abtestDbStream = require('./../db/abtest');
 
 describe('Ab test api', function () {
-    after(function (done) {
-        connectUsersDB()
-            .subscribe(function (db) {
-                db.collection('users').remove({});
-                done();
-            });
+    let u;
+    let a;
+
+    before(function () {
+        u = usersDbStream.connect();
+        a = abtestDbStream.connect();
+
+        usersDbStream.subscribe(function (db) {
+            db.collection('users').remove({});
+        });
+    });
+
+    after(function () {
+        u.dispose();
+        a.dispose();
     });
 
     require('./creating-user');

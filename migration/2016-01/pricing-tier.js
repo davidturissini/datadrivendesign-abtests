@@ -5,8 +5,9 @@ const dbConnection = require('./../../src/db/connection');
 const PricingTier = require('./../../src/model/PricingTier');
 const User = require('./../../src/model/User');
 
-function createPricingTier (attributes) {
+function createPricingTier(attributes) {
     return rx.Observable.create(function (o) {
+        console.log(attributes);
         PricingTier.create(attributes, function (err, tier) {
             if (err) {
                 o.onError(err);

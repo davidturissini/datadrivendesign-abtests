@@ -1,31 +1,29 @@
 'use strict';
 
-const request = require('supertest');
 const chai = require('chai');
 const expect = chai.expect;
 
-const abtesturl = require('./../helper/abtest-url');
-const connectUsersDb = require('./../helper/connect-users-db');
-const connectAbtestDb = require('./../helper/connect-abtest-db');
+const usersDbStream = require('./../db/user');
+const abtestDBStream = require('./../db/abtest');
+const createPostUsersRequest = require('./../helper/requests/POST_users');
 
 describe('POST /users', function () {
     let res;
 
-    before(function (done) {
-        abtesturl()
-            .subscribe((url) => {
-                request(url)
-                    .post('/users')
-                    .send({
-                        username: 'test@test.com',
-                        password: 'password',
-                        confirm: 'password'
-                    })
-                    .end(function (err, r) {
-                        res = r;
-                        done();
-                    });
-            });
+    before(function () {
+        return createPostUsersRequest({
+            username: 'test@test.com',
+            password: 'password',
+            confirm: 'password'
+        }, {
+            name: 'DEV'
+        })
+        .toPromise()
+        .then((r) => {
+            res = r;
+        }, function (e) {
+            console.log(e);
+        });
     });
 
     it('should have a status 200', function () {
@@ -34,11 +32,11 @@ describe('POST /users', function () {
 
     describe('database', function () {
         let mongoUser;
+        let pricingTier;
         let abtestUser;
 
         before(function () {
-            return connectUsersDb()
-                .toPromise()
+            return usersDbStream.toPromise()
                 .then(function (db) {
                     return db.collection('users').findOne({
                         username: 'test@test.com'
@@ -47,20 +45,26 @@ describe('POST /users', function () {
                 .then(function (user) {
                     mongoUser = user;
 
-                    return connectAbtestDb()
-                        .toPromise()
+                    return abtestDBStream.toPromise()
                         .then((abtestDb) => {
-                            return abtestDb.collection('users').findOne({
+                            const userPromise = abtestDb.collection('users').findOne({
                                 user_management_id: mongoUser._id.toString()
                             });
+
+                            const pricingTierPromise = abtestDb.collection('pricingtiers').findOne({
+                                name: 'DEV'
+                            });
+
+                            return Promise.all([
+                                userPromise,
+                                pricingTierPromise
+                            ]);
                         })
-                        .then((aUser) => {
-                            abtestUser = aUser;
+                        .then((args) => {
+                            abtestUser = args[0];
+                            pricingTier = args[1];
                         });
-                })
-                .catch(function (err) {
-                    console.log(err);
-                })
+                });
         });
 
         it('should have saved an abtest user', function () {
@@ -90,6 +94,14 @@ describe('POST /users', function () {
         it('should have saved a salt', function () {
             expect(mongoUser.salt).to.exist;
         });
+
+        it('should have assigned a pricingTier property', function () {
+            expect(abtestUser.pricingTier.toString()).to.equal(pricingTier._id.toString());
+        });
+
+        it('should have assigned an apiKey property', function () {
+            expect(abtestUser.apiKey).to.exist;
+        });
     });
 
     describe('response', function () {
@@ -103,7 +115,7 @@ describe('POST /users', function () {
             expect(body.data).to.exist;
         });
 
-        it('should have the correct attributes', function () {
+        it('should have the correct type', function () {
             expect(body.data.type).to.equal('user');
         });
 
@@ -149,6 +161,14 @@ describe('POST /users', function () {
             it('should not have an _id property', function () {
                 expect(attributes._id).to.not.exist;
             });
+
+            it('should not have a pricingTier property', function () {
+                expect(attributes.pricingTier).to.not.exist;
+            });
+
+            it('should not have an apiKey property', function () {
+                expect(attributes.apiKey).to.not.exist;
+            });
         });
 
         describe('relationships', function () {
@@ -169,6 +189,46 @@ describe('POST /users', function () {
 
                 it('should have an id attribute', function () {
                     expect(relationships.apikey.id).to.be.a('string');
+                });
+            });
+
+            it('should have a pricingTier', function () {
+                expect(relationships.pricingTier).to.exist;
+            });
+
+            describe('pricingTier', function () {
+                it('should have a type attribute', function () {
+                    expect(relationships.pricingTier.type).to.equal('pricingtier');
+                });
+
+                it('should have attributes', function () {
+                    expect(relationships.pricingTier.attributes).to.exist;
+                });
+
+                describe('pricingTier attributes', function () {
+                    it('should have a label', function () {
+                        expect(relationships.pricingTier.attributes.label).to.equal('development');
+                    });
+
+                    it('should have a name', function () {
+                        expect(relationships.pricingTier.attributes.name).to.equal('DEV');
+                    });
+
+                    it('should have an impressions_limit', function () {
+                        expect(relationships.pricingTier.attributes.impressions_limit).to.equal(500);
+                    });
+
+                    it('should have an abtest_limit', function () {
+                        expect(relationships.pricingTier.attributes.abtest_limit).to.equal(20);
+                    });
+
+                    it('should not have an _id property', function () {
+                        expect(relationships.pricingTier.attributes._id).to.not.exist;
+                    });
+
+                    it('should not have an __v property', function () {
+                        expect(relationships.pricingTier.attributes.__v).to.not.exist;
+                    });
                 });
             });
         });

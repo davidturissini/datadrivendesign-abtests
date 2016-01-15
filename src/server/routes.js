@@ -39,6 +39,10 @@ module.exports = rx.Observable.create(function (o) {
         method: 'get',
         path: '/users/:user_id/abtests/:abtest_id',
         handler: require('./../controller/abtest/show')
+    }, {
+        method: 'get',
+        path: '/pricingtiers',
+        handler: require('./../controller/pricingTier/index')
     }];
 
     routes.forEach(function (route) {
