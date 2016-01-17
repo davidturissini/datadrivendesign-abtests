@@ -222,6 +222,10 @@ describe('POST /users', function () {
                         expect(relationships.pricingTier.attributes.abtest_limit).to.equal(20);
                     });
 
+                    it('should have a price_per_unit', function () {
+                        expect(relationships.pricingTier.attributes.price_per_unit).to.equal(0);
+                    });
+
                     it('should not have an _id property', function () {
                         expect(relationships.pricingTier.attributes._id).to.not.exist;
                     });

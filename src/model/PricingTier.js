@@ -21,6 +21,11 @@ const PricingTier = mongoose.model('PricingTier', {
     label: {
         type: String,
         required: true
+    },
+
+    price_per_unit: {
+        type: Number,
+        required: true
     }
 });
 

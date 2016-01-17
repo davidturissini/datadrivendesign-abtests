@@ -20,6 +20,10 @@ module.exports = rx.Observable.create(function (o) {
         path: '/users/:user_id',
         handler: require('./../controller/user/show')
     }, {
+        method: 'put',
+        path: '/users/:user_id',
+        handler: require('./../controller/user/update')
+    }, {
         method: 'get',
         path: '/users/:user_id/abtests',
         handler: require('./../controller/abtest/index')

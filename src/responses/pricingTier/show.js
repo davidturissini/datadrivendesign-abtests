@@ -13,6 +13,7 @@ module.exports = function (pricingTier) {
 
         const data = {
             type: 'pricingtier',
+            id: pricingTier._id,
             attributes: pricingTierAttributes
         };
 

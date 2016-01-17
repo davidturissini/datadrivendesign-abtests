@@ -7,7 +7,6 @@ const User = require('./../../src/model/User');
 
 function createPricingTier(attributes) {
     return rx.Observable.create(function (o) {
-        console.log(attributes);
         PricingTier.create(attributes, function (err, tier) {
             if (err) {
                 o.onError(err);
@@ -22,16 +21,18 @@ function createPricingTier(attributes) {
 dbConnection.flatMapLatest((db) => {
     const devTierStream = createPricingTier({
         impressions_limit: 500,
-        abtest_limit: 20,
+        abtest_limit: 5,
         name: 'DEV',
-        label: 'development'
+        label: 'development',
+        price_per_unit: 0
     });
 
     const proTierStream = createPricingTier({
         impressions_limit: Infinity,
         abtest_limit: Infinity,
         name: 'PRO',
-        label: 'professional'
+        label: 'professional',
+        price_per_unit: 49.99
     });
 
     return devTierStream

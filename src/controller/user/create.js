@@ -14,15 +14,15 @@ const ApiKey = require('./../../model/ApiKey');
 const userNameValidation = require('./../../validations/user/username');
 
 // Queries
-const queryOnePricingTier = require('./../../queries/pricingTier/findOne');
+const queryPricingTierById = require('./../../queries/pricingTier/findById');
 
 // Response
 const userShowResponse = require('./../../responses/user/show');
 
 module.exports = function (req) {
-    const pricingTierAttributes = req.body.data.relationships.pricingTier.attributes;
+    const pricingTierAttributes = req.body.data.relationships.pricingTier.id;
 
-    const pricingTierStream = queryOnePricingTier(pricingTierAttributes);
+    const pricingTierStream = queryPricingTierById(pricingTierAttributes);
 
     return rx.Observable.return(req.body.data.attributes)
         .flatMapLatest((userData) => {
