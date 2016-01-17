@@ -29,4 +29,5 @@ describe('Ab test api', function () {
     require('./creating-impressions');
     require('./creating-conversions');
     require('./calculating-abtest-results');
+    require('./update-user-pricing-tier');
 });
